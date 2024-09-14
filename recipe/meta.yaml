@@ -1,4 +1,4 @@
-{% set version = "1.27.59" %}
+{% set version = "1.27.60" %}
 
 package:
   name: verapdf
@@ -6,14 +6,14 @@ package:
 
 source:
   - url: https://github.com/veraPDF/veraPDF-apps/archive/refs/tags/v{{ version }}.tar.gz
-    sha256: 6df8f0b4273603500dd6a83db586e9dd2f29ffec896688d2b104344e1c249359
+    sha256: 698ae7140d4f733b0c6d63c63587c8045cb7641ccca9a04e8a645302c2ded047
   - url: https://pdfa.org/wp-content/uploads/2021/04/Matterhorn-Protocol-1-1.pdf
     sha256: b8bf0b00fd789ef8d8548d2eeb7e83194db394d9f1be741f2d0ef1d62bff50c6
 
 build:
   # fails with "file too long" as of https://github.com/conda-forge/verapdf-feedstock/pull/96
   skip: true  # [win]
-  number: 1
+  number: 0
   ignore_run_exports:
     - python
     - python_abi
