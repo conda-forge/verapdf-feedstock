@@ -1,4 +1,4 @@
-{% set version = "1.27.99" %}
+{% set version = "1.27.100" %}
 
 package:
   name: verapdf
@@ -6,7 +6,7 @@ package:
 
 source:
   - url: https://github.com/veraPDF/veraPDF-apps/archive/refs/tags/v{{ version }}.tar.gz
-    sha256: e431c0c524a2525672474989d91487f58431c12bab41669bf56646b853af4ea0
+    sha256: 43b758b000289b05c9b191c9f6efe0ce1ade6b44fb3706932d88c5a16b22f4e5
   - url: https://pdfa.org/wp-content/uploads/2021/04/Matterhorn-Protocol-1-1.pdf
     sha256: b8bf0b00fd789ef8d8548d2eeb7e83194db394d9f1be741f2d0ef1d62bff50c6
 
