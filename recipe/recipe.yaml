@@ -31,6 +31,8 @@ tests:
   - files:
       source:
         - Matterhorn-Protocol-1-1.pdf
+      recipe:
+        - run_test.py
     requirements:
       run:
         - pytest
