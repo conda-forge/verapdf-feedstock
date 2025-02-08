@@ -9,7 +9,7 @@ Package license: GPL-3.0-or-later OR MPL-2.0
 
 Summary: Command line and GUI industry supported PDF/A and PDF/UA Validation
 
-Documentation: https://docs.verapdf.org
+Documentation: https://docs.verapdf.org/
 
 Current build status
 ====================
