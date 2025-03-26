@@ -2,6 +2,7 @@ schema_version: 1
 
 context:
   version: "1.29.22"
+  openjdk_build_min: "11"
   openjdk_min: "8"
 
 package:
@@ -23,7 +24,7 @@ requirements:
   build:
     - maven
     - python >=3.9
-    - openjdk ${{ openjdk_min }}.*
+    - openjdk ${{ openjdk_build_min }}.*
   run:
     - openjdk >=${{ openjdk_min }}
 
