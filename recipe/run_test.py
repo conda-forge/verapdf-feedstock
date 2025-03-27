@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import sys
 import subprocess
+import pytest
 
 
 WIN = platform.system() == "Windows"
@@ -12,10 +13,10 @@ PKG_VERSION = os.environ["PKG_VERSION"]
 MATTERHORN = "Matterhorn-Protocol-1-1.pdf"
 PYTEST_ARGS = [sys.executable, "-m", "pytest", "-vv", "--color=yes", __file__]
 
-import pytest
 
 def _find_cmd(cmd):
     return shutil.which(f"{cmd}{SCRIPT_EXT}")
+
 
 def _verapdf(*args: str):
     proc = subprocess.Popen(
