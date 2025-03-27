@@ -91,6 +91,8 @@ def install():
         script = inst_dir / INSTALL_SCRIPT
         versioned_installer = f"verapdf-izpack-installer-{PKG_VERSION}.jar"
         unversioned_installer = "verapdf-izpack-installer.jar"
+        if WIN:
+            versioned_installer = f"%BASEDIR%{versioned_installer}"
         script_text = script.read_text(**UTF8).replace(
             versioned_installer, str(zip_path.parent / unversioned_installer)
         )
