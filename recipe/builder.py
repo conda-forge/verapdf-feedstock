@@ -1,4 +1,11 @@
-import os, sys, subprocess, zipfile, tempfile, shutil, textwrap, stat
+import os
+import sys
+import subprocess
+import zipfile
+import tempfile
+import shutil
+import textwrap
+import stat
 from pprint import pprint
 from pathlib import Path
 import platform
@@ -17,12 +24,17 @@ PKG_VERSION = os.environ["PKG_VERSION"]
 PREFIX = Path(os.environ["PREFIX"])
 DEST = PREFIX / ("Library/verapdf" if WIN else "share/verapdf")
 
-MVN_EXE = Path(
+WHICH_MAVEN = (
     shutil.which("mvn")
     or shutil.which("mvn.exe")
     or shutil.which("mvn.bat")
     or shutil.which("mvn.cmd")
 )
+
+if not WHICH_MAVEN:
+    sys.exit(1)
+
+MVN_EXE = Path(WHICH_MAVEN)
 MVN_OPTS = [str(MVN_EXE), "--batch-mode"]
 
 WIN_TEMPLATE = """
@@ -44,6 +56,11 @@ def build():
     mvn(["versions:set", f"-DnewVersion={PKG_VERSION}"])
     mvn(["clean"])
     mvn(["install", "-DskipTests"])
+
+
+def show(msg: str, path: Path) -> None:
+    print(f"{msg}... {path}", "\n")
+    print(textwrap.indent(path.read_text(**UTF8), "\t\t"), flush=True)
 
 
 def install():
@@ -69,12 +86,23 @@ def install():
             ),
             **UTF8,
         )
-        print(textwrap.indent(tmp_auto_install.read_text(**UTF8), "\t\t"), flush=True)
+        show("... wrote", tmp_auto_install)
 
         script = inst_dir / INSTALL_SCRIPT
-        script.chmod(script.stat().st_mode | stat.S_IEXEC)
+        versioned_installer = f"verapdf-izpack-installer-{PKG_VERSION}.jar"
+        unversioned_installer = "verapdf-izpack-installer.jar"
+        if WIN:
+            versioned_installer = f"%BASEDIR%{versioned_installer}"
+        script_text = script.read_text(**UTF8).replace(
+            versioned_installer, str(zip_path.parent / unversioned_installer)
+        )
+        script.write_text(script_text, **UTF8)
+        show("... fixed install name in", script)
 
-        rc = subprocess.call([str(script), tmp_auto_install.name], cwd=str(inst_dir))
+        str_args = [*map(str, [script, tmp_auto_install.name])]
+        print(">>> ", str_args, flush=True)
+        script.chmod(script.stat().st_mode | stat.S_IEXEC)
+        rc = subprocess.call(str_args, cwd=str(inst_dir))
         if rc:
             sys.exit(rc)
 
@@ -100,9 +128,7 @@ def deploy():
 
 
 def make_bat_wrapper(script_src: Path, script_dest: Path):
-    script_dest.write_text(
-        WIN_TEMPLATE.format(script_src=str(script_src.resolve()))
-    )
+    script_dest.write_text(WIN_TEMPLATE.format(script_src=str(script_src.resolve())))
 
 
 def clean():
