@@ -89,15 +89,6 @@ def install():
         show("... wrote", tmp_auto_install)
 
         script = inst_dir / INSTALL_SCRIPT
-        versioned_installer = f"verapdf-izpack-installer-{PKG_VERSION}.jar"
-        unversioned_installer = "verapdf-izpack-installer.jar"
-        if WIN:
-            versioned_installer = f"%BASEDIR%{versioned_installer}"
-        script_text = script.read_text(**UTF8).replace(
-            versioned_installer, str(zip_path.parent / unversioned_installer)
-        )
-        script.write_text(script_text, **UTF8)
-        show("... fixed install name in", script)
 
         str_args = [*map(str, [script, tmp_auto_install.name])]
         print(">>> ", str_args, flush=True)
