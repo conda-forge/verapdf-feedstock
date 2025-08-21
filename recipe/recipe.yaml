@@ -1,7 +1,7 @@
 schema_version: 1
 
 context:
-  version: "1.29.102"
+  version: "1.29.103"
   openjdk_min: "8"
 
 package:
@@ -10,7 +10,7 @@ package:
 
 source:
   - url: https://github.com/veraPDF/veraPDF-apps/archive/refs/tags/v${{ version }}.tar.gz
-    sha256: 66029fcc2e26087b0cf3222bcf3246ab220d7d6596b6da8c2a212df06fba95e4
+    sha256: c19f083a466ce3162f84c4b28161a14cf4600512fbff5dc63e717bd54a6ce50c
   - url: https://pdfa.org/wp-content/uploads/2021/04/Matterhorn-Protocol-1-1.pdf
     sha256: b8bf0b00fd789ef8d8548d2eeb7e83194db394d9f1be741f2d0ef1d62bff50c6
 
