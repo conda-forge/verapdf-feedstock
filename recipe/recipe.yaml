@@ -15,7 +15,7 @@ source:
     sha256: b8bf0b00fd789ef8d8548d2eeb7e83194db394d9f1be741f2d0ef1d62bff50c6
 
 build:
-  number: 0
+  number: 1
   script:
     - python ${{ RECIPE_DIR }}/builder.py
 
