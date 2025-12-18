@@ -2,7 +2,7 @@ schema_version: 1
 
 context:
   version: "1.29.190"
-  openjdk_min: "8"
+  openjdk_min: "9"
 
 package:
   name: verapdf
