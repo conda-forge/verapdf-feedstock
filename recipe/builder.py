@@ -88,12 +88,13 @@ def install():
         )
         show("... wrote", tmp_auto_install)
 
-        script = inst_dir / INSTALL_SCRIPT
-        show("... install script", script)
-
-        str_args = [*map(str, [script, tmp_auto_install.name])]
+        str_args = [
+            "java",
+            "-jar",
+            f"verapdf-izpack-installer-{PKG_VERSION}.jar",
+            tmp_auto_install.name,
+        ]
         print(">>> ", str_args, flush=True)
-        script.chmod(script.stat().st_mode | stat.S_IEXEC)
         rc = subprocess.call(str_args, cwd=str(inst_dir))
         if rc:
             sys.exit(rc)
