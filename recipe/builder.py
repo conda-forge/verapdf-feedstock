@@ -89,6 +89,7 @@ def install():
         show("... wrote", tmp_auto_install)
 
         script = inst_dir / INSTALL_SCRIPT
+        show("... install script", script)
 
         str_args = [*map(str, [script, tmp_auto_install.name])]
         print(">>> ", str_args, flush=True)
