@@ -1,11 +1,10 @@
 import os
-import sys
-import subprocess
-import zipfile
-import tempfile
 import shutil
+import subprocess
+import sys
+import tempfile
 import textwrap
-import stat
+import zipfile
 from pprint import pprint
 from pathlib import Path
 import platform
@@ -20,42 +19,58 @@ INSTALL_SCRIPT = "verapdf-install.bat" if WIN else "verapdf-install"
 RG_PATH = Path(r"C:\Miniforge\Library\bin\rg.exe")
 
 SRC_DIR = Path(os.environ["SRC_DIR"])
+RECIPE_DIR = Path(os.environ["RECIPE_DIR"])
 PKG_VERSION = os.environ["PKG_VERSION"]
 PREFIX = Path(os.environ["PREFIX"])
+
+POM = SRC_DIR / "pom.xml"
 DEST = PREFIX / ("Library/verapdf" if WIN else "share/verapdf")
+LICENSES = SRC_DIR / "third-party-licenses"
+SCRIPT_RUNNER = ["start", "/w"] if WIN else ["bash"]
 
-WHICH_MAVEN = (
-    shutil.which("mvn")
-    or shutil.which("mvn.exe")
-    or shutil.which("mvn.bat")
-    or shutil.which("mvn.cmd")
-)
+EXAMPLE_GOOD = RECIPE_DIR / "Matterhorn-Protocol-1-1.pdf"
 
-if not WHICH_MAVEN:
+
+def anywhich(what: str) -> Path:
+    for ext in ["", ".exe", ".bat", ".cmd"]:
+        found = shutil.which(f"{what}{ext}")
+        if found:
+            return Path(found)
+    print("can't find", what)
     sys.exit(1)
 
-MVN_EXE = Path(WHICH_MAVEN)
-MVN_OPTS = [str(MVN_EXE), "--batch-mode"]
 
-WIN_TEMPLATE = """
-@echo off
-call "{script_src}" %*
-"""
+JAVA_EXE = anywhich("java")
+MVN_EXE = anywhich("mvn")
+
+MVN_OPTS = [
+    str(MVN_EXE),
+    "--batch-mode",
+    f"-Dmaven.repo.local={SRC_DIR / '.m2'}",
+]
+
+WIN_TEMPLATE = [
+    "@echo off",
+    'call "{script_src}" %*',
+]
 
 
-def mvn(args):
+def mvn(args) -> int:
     final_args = list(map(str, [*MVN_OPTS, *args]))
-    print(">>>", "\t".join(final_args), flush=True)
+    print("\n\n>>>", "\t".join(final_args), "\n\n", flush=True)
     rc = subprocess.call(final_args)
     if rc:
-        sys.exit(1)
-    print("...  OK", "\t".join(final_args), flush=True)
+        sys.exit(rc)
+    print("\n\n...  OK", "\t".join(final_args), "\n\n", flush=True)
+    return rc
 
 
-def build():
-    mvn(["versions:set", f"-DnewVersion={PKG_VERSION}"])
-    mvn(["clean"])
-    mvn(["install", "-DskipTests"])
+def build() -> int:
+    return (
+        mvn(["clean"])
+        or mvn(["versions:set", f"-DnewVersion={PKG_VERSION}"])
+        or mvn(["install", "-DskipTests"])
+    )
 
 
 def show(msg: str, path: Path) -> None:
@@ -63,7 +78,7 @@ def show(msg: str, path: Path) -> None:
     print(textwrap.indent(path.read_text(**UTF8), "\t\t"), flush=True)
 
 
-def install():
+def install() -> int:
     src_auto_install = SRC_DIR / "auto-install-tmp.xml"
 
     zip_name = f"verapdf-greenfield-{PKG_VERSION}-installer.zip"
@@ -88,17 +103,18 @@ def install():
         )
         show("... wrote", tmp_auto_install)
 
-        script = inst_dir / INSTALL_SCRIPT
-
-        str_args = [*map(str, [script, tmp_auto_install.name])]
+        str_args = [
+            *map(str, [JAVA_EXE, "-jar", *tdp.rglob("*.jar"), tmp_auto_install])
+        ]
         print(">>> ", str_args, flush=True)
-        script.chmod(script.stat().st_mode | stat.S_IEXEC)
-        rc = subprocess.call(str_args, cwd=str(inst_dir))
+        rc = subprocess.call(str_args, cwd=str(inst_dir.resolve()))
         if rc:
+            print("!!! FAIL", rc, *str_args, flush=True)
             sys.exit(rc)
+        return rc
 
 
-def deploy():
+def deploy() -> int:
     for exe_name in EXE_NAMES:
         if WIN:
             script_src = DEST / f"{exe_name}.bat"
@@ -116,13 +132,20 @@ def deploy():
             make_bat_wrapper(script_src, script_dest)
         else:
             script_dest.symlink_to(script_src)
+    shutil.copy2(EXAMPLE_GOOD, DEST / "documents" / EXAMPLE_GOOD.name)
+    return 0
 
 
-def make_bat_wrapper(script_src: Path, script_dest: Path):
-    script_dest.write_text(WIN_TEMPLATE.format(script_src=str(script_src.resolve())))
+def make_bat_wrapper(script_src: Path, script_dest: Path) -> int:
+    print("... writing", script_dest, "\n", flush=True)
+    win_nl = "\r\n"
+    text = win_nl.join(WIN_TEMPLATE).format(script_src=str(script_src.resolve()))
+    print(textwrap.indent(text, "\t"), "\n", flush=True)
+    script_dest.write_text(text, newline="\r\n", **UTF8)
+    return 0
 
 
-def clean():
+def clean() -> int:
     for path in [DEST / "Uninstaller"]:
         print("... cleaning", path, flush=True)
         shutil.rmtree(path)
@@ -132,15 +155,23 @@ def clean():
             "... removing ripgrep for https://github.com/conda/conda-build/issues/4357"
         )
         RG_PATH.unlink()
+    return 0
 
 
-def main() -> int:
-    build()
-    install()
-    deploy()
-    clean()
+def licenses() -> int:
+
+    mvn(
+        [
+            "org.codehaus.mojo:license-maven-plugin:download-licenses",
+            "-Dlicense.excludedScopes=system,test,provided,import"
+            "-Dlicense.errorRemedy=warn",
+        ]
+    )
+    LICENSES.mkdir(parents=True)
+    for app in ["cli", "gui"]:
+        shutil.copytree(SRC_DIR / app / "target/generated-resources", LICENSES / app)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(build() or install() or deploy() or licenses() or clean())
